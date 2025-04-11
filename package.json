@@ -1,0 +1,32 @@
+{
+  "name": "ustym-airbnb-iot-lab2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+      "build": "tsc", 
+      "generate:csv": "node dist/scripts/generate-csv.js", 
+      "load:data": "node dist/scripts/load-data.js",    
+      "dev:generate:csv": "ts-node src/scripts/generate-csv.ts", 
+      "dev:load:data": "ts-node src/scripts/load-data.ts",        
+      "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "dotenv": "^16.4.7",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.9.1"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.6.0",
+    "@types/dotenv": "^8.2.3",
+    "@types/node": "^22.14.0",
+    "csv-parser": "^3.2.0",
+    "prisma": "^6.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

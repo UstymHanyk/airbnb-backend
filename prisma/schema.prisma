@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums ---
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  CONDO
+  LOFT
+  OTHER
+}
+
+// --- Models ---
+
+model User {
+  userId             String  @id @default(cuid())
+  name               String
+  email              String  @unique
+  phoneNumber        String?
+  profilePictureUrl  String?
+  verificationStatus Boolean @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  propertyOwner PropertyOwner?
+  guest         Guest?
+  reviews       Review[]       @relation("UserReviews") // Default onDelete: Restrict
+  reservations  Reservation[]  @relation("GuestReservations") // Default onDelete: Restrict
+}
+
+model PropertyOwner {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [userId], onDelete: Cascade) // CORRECT
+
+  ownerRating  Float?
+  responseRate Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  properties    Property[] // Relation defined on Property side
+}
+
+model Guest {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [userId], onDelete: Cascade) // CORRECT
+
+  guestRating Float?
+  searchPreferencesJson Json? @db.Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+model Property {
+  propertyId    String       @id @default(cuid())
+  title         String
+  description   String
+  addressLine1  String?
+  city          String?
+  postalCode    String?
+  country       String?
+  latitude      Float?
+  longitude     Float?
+  pricePerNight Float
+  amenities     String[]
+  maxGuests     Int
+  propertyType  PropertyType
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  ownerId       String
+  // --- RELATION CHANGE ---
+  owner         PropertyOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade) // CORRECTED: Cascade delete properties if owner deleted
+  // --- END RELATION CHANGE ---
+
+  photos        PropertyPhoto[] // Relation defined on PropertyPhoto side
+  reviews       Review[]      @relation("PropertyReviews") // Relation defined on Review side
+  reservations  Reservation[] // Relation defined on Reservation side
+
+  @@index([ownerId])
+}
+
+model PropertyPhoto {
+  photoId   String   @id @default(cuid())
+  imageUrl  String
+  caption   String?
+  roomType  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [propertyId], onDelete: Cascade) // CORRECT
+
+  @@index([propertyId])
+}
+
+model Review {
+  reviewId     String   @id @default(cuid())
+  rating       Float
+  comment      String?
+  datePosted   DateTime @default(now())
+
+  reviewerId String
+  reviewer   User     @relation("UserReviews", fields: [reviewerId], references: [userId]) // Default: Restrict - CORRECT (Safer)
+
+  propertyId String
+  property   Property @relation("PropertyReviews", fields: [propertyId], references: [propertyId], onDelete: Cascade) // CORRECT
+
+  @@index([reviewerId])
+  @@index([propertyId])
+}
+
+model Reservation {
+  reservationId String            @id @default(cuid())
+  checkInDate   DateTime
+  checkOutDate  DateTime
+  totalPrice    Float
+  status        ReservationStatus @default(PENDING)
+  guestCount    Int
+  specialRequests String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  guestId    String
+  guest      User   @relation("GuestReservations", fields: [guestId], references: [userId]) // Default: Restrict - CORRECT (Essential)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [propertyId]) // Default: Restrict - CORRECT (Essential)
+
+  payment    Payment? // Relation defined on Payment side
+
+  @@index([guestId])
+  @@index([propertyId])
+}
+
+model Payment {
+  paymentId      String        @id @default(cuid())
+  amount         Float
+  paymentDate    DateTime      @default(now())
+  paymentMethod  String
+  transactionFee Float?
+  status         PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [reservationId], onDelete: Cascade) // CORRECT
+
+  @@index([reservationId])
+}
