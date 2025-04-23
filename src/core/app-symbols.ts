@@ -20,13 +20,13 @@ const AppSymbols = {
     // Services (Interfaces)
     DataLoadingService: Symbol.for('DataLoadingService'),
     // Add other services like UserService, PropertyService later if needed
-    // UserService: Symbol.for('UserService'),
-    // PropertyService: Symbol.for('PropertyService'),
+    PropertyService: Symbol.for('PropertyService'),
+    PropertyModel: Symbol.for('PropertyModel'),
   
     // --- PL ---
     // Controllers (Interfaces - Placeholders for later)
-     UserController: Symbol.for('UserController'),
-    // PropertyController: Symbol.for('PropertyController'),
+    UserController: Symbol.for('UserController'),
+    PropertyController: Symbol.for('PropertyController'),
     // ReservationController: Symbol.for('ReservationController'),
   
   };

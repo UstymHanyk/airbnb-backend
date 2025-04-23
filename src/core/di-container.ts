@@ -32,17 +32,37 @@ import { IDataLoadingService } from '../domain/interfaces/IDataLoadingService';
 
 // --- Import BLL Implementations ---
 import { DataLoadingService } from '../domain/services/DataLoadingService';
-// Import other BLL services if they exist (e.g., UserService)
+import { PropertyService } from '../domain/services/PropertyService';
+import { PropertyModel } from '../domain/models/PropertyModel';
 
-// --- Import PL Interfaces (no implementations needed for Lab 2) ---
-// import { IUserController } from '../presentation/interfaces/IUserController';
-
+// --- Import PL Implementations ---
+import { PropertyController } from '../presentation/controllers/PropertyController';
 
 // --- Register Dependencies ---
 
 // Register Prisma Client as a singleton instance
 // This ensures all repositories use the same DB connection pool
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'error', 'warn'],
+  // Adding connection management options
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+
+// Add middleware to handle potential connection issues
+prisma.$use(async (params, next) => {
+  try {
+    return await next(params);
+  } catch (error) {
+    // Log the error for debugging
+    console.error("Prisma middleware caught an error:", error);
+    throw error;
+  }
+});
+
 container.register<PrismaClient>(AppSymbols.PrismaClient, { useValue: prisma });
 
 // --- Register DAL ---
@@ -58,13 +78,11 @@ container.register<IPaymentRepository>(AppSymbols.PaymentRepository, { useClass:
 
 // --- Register BLL ---
 container.register<IDataLoadingService>(AppSymbols.DataLoadingService, { useClass: DataLoadingService });
-// Register other BLL services here if created (e.g., UserService)
-// container.register<IUserService>(AppSymbols.UserService, { useClass: UserService });
+container.register(AppSymbols.PropertyModel, { useClass: PropertyModel });
+container.register(AppSymbols.PropertyService, { useClass: PropertyService });
 
-
-// --- Register PL (optional placeholders, no implementations) ---
-// container.register<IUserController>(AppSymbols.UserController, { useClass: UserController }); // Would add UserController implementation later
-
+// --- Register PL Controllers ---
+container.register(AppSymbols.PropertyController, { useClass: PropertyController });
 
 // --- Prisma Shutdown Hook ---
 // Optional, but good practice to ensure graceful shutdown

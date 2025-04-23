@@ -10,31 +10,59 @@ export class PrismaPropertyRepository implements IPropertyRepository {
     ) {}
 
     async create(data: Prisma.PropertyCreateInput): Promise<Property> {
-        return this.prisma.property.create({ data });
+        try {
+            return await this.prisma.property.create({ data });
+        } catch (error) {
+            console.error("Error creating property:", error);
+            throw error;
+        }
     }
 
     async createMany(data: Prisma.PropertyCreateManyInput[]): Promise<Prisma.BatchPayload> {
-        return this.prisma.property.createMany({ data, skipDuplicates: true });
+        try {
+            return await this.prisma.property.createMany({ data, skipDuplicates: true });
+        } catch (error) {
+            console.error("Error creating multiple properties:", error);
+            throw error;
+        }
     }
 
     async findById(propertyId: string): Promise<Property | null> {
-        return this.prisma.property.findUnique({ where: { propertyId: propertyId } });
+        try {
+            return await this.prisma.property.findUnique({ where: { propertyId: propertyId } });
+        } catch (error) {
+            console.error(`Error finding property by ID ${propertyId}:`, error);
+            throw error;
+        }
     }
 
     async findByOwnerId(ownerId: string): Promise<Property[]> {
-        return this.prisma.property.findMany({ where: { ownerId: ownerId } });
+        try {
+            return await this.prisma.property.findMany({ where: { ownerId: ownerId } });
+        } catch (error) {
+            console.error(`Error finding properties by owner ID ${ownerId}:`, error);
+            throw error;
+        }
     }
 
     async findMany(args?: Prisma.PropertyFindManyArgs): Promise<Property[]> {
-        return this.prisma.property.findMany(args);
+        try {
+            return await this.prisma.property.findMany(args);
+        } catch (error) {
+            console.error("Error finding multiple properties:", error);
+            throw error;
+        }
     }
 
     async update(propertyId: string, data: Prisma.PropertyUpdateInput): Promise<Property | null> {
-         try {
+        try {
             return await this.prisma.property.update({ where: { propertyId: propertyId }, data: data });
         } catch (error) {
-             if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') { return null; }
-             throw error;
+            if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') { 
+                return null; 
+            }
+            console.error(`Error updating property ${propertyId}:`, error);
+            throw error;
         }
     }
 
@@ -42,8 +70,11 @@ export class PrismaPropertyRepository implements IPropertyRepository {
         try {
             return await this.prisma.property.delete({ where: { propertyId: propertyId } });
         } catch (error) {
-             if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') { return null; }
-             throw error;
+            if ((error as Prisma.PrismaClientKnownRequestError).code === 'P2025') { 
+                return null; 
+            }
+            console.error(`Error deleting property ${propertyId}:`, error);
+            throw error;
         }
     }
 }
